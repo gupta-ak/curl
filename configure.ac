@@ -698,169 +698,169 @@ AC_HELP_STRING([--enable-libgcc],[use libgcc when linking]),
 CURL_CHECK_LIB_XNET
 
 dnl gethostbyname without lib or in the nsl lib?
-AC_CHECK_FUNC(gethostbyname,
-              [HAVE_GETHOSTBYNAME="1"
-              ],
-              [ AC_CHECK_LIB(nsl, gethostbyname,
-                             [HAVE_GETHOSTBYNAME="1"
-                             LIBS="-lnsl $LIBS"
-                             ])
-              ])
+#AC_CHECK_FUNC(gethostbyname,
+#              [HAVE_GETHOSTBYNAME="1"
+#              ],
+#              [ AC_CHECK_LIB(nsl, gethostbyname,
+#                             [HAVE_GETHOSTBYNAME="1"
+#                             LIBS="-lnsl $LIBS"
+#                             ])
+#              ])
 
-if test "$HAVE_GETHOSTBYNAME" != "1"
-then
-  dnl gethostbyname in the socket lib?
-  AC_CHECK_LIB(socket, gethostbyname,
-               [HAVE_GETHOSTBYNAME="1"
-               LIBS="-lsocket $LIBS"
-               ])
-fi
+#if test "$HAVE_GETHOSTBYNAME" != "1"
+#then
+#  dnl gethostbyname in the socket lib?
+#  AC_CHECK_LIB(socket, gethostbyname,
+#               [HAVE_GETHOSTBYNAME="1"
+#               LIBS="-lsocket $LIBS"
+#               ])
+#fi
 
-if test "$HAVE_GETHOSTBYNAME" != "1"
-then
-  dnl gethostbyname in the watt lib?
-  AC_CHECK_LIB(watt, gethostbyname,
-               [HAVE_GETHOSTBYNAME="1"
-               CPPFLAGS="-I/dev/env/WATT_ROOT/inc"
-               LDFLAGS="-L/dev/env/WATT_ROOT/lib"
-               LIBS="-lwatt $LIBS"
-               ])
-fi
+#if test "$HAVE_GETHOSTBYNAME" != "1"
+#then
+#  dnl gethostbyname in the watt lib?
+#  AC_CHECK_LIB(watt, gethostbyname,
+#               [HAVE_GETHOSTBYNAME="1"
+#               CPPFLAGS="-I/dev/env/WATT_ROOT/inc"
+#               LDFLAGS="-L/dev/env/WATT_ROOT/lib"
+#               LIBS="-lwatt $LIBS"
+#               ])
+#fi
 
 dnl At least one system has been identified to require BOTH nsl and socket
 dnl libs at the same time to link properly.
-if test "$HAVE_GETHOSTBYNAME" != "1"
-then
-  AC_MSG_CHECKING([for gethostbyname with both nsl and socket libs])
-  my_ac_save_LIBS=$LIBS
-  LIBS="-lnsl -lsocket $LIBS"
-  AC_LINK_IFELSE([
-    AC_LANG_PROGRAM([[
-    ]],[[
-      gethostbyname();
-    ]])
-  ],[
-    AC_MSG_RESULT([yes])
-    HAVE_GETHOSTBYNAME="1"
-  ],[
-    AC_MSG_RESULT([no])
-    LIBS=$my_ac_save_LIBS
-  ])
-fi
+#if test "$HAVE_GETHOSTBYNAME" != "1"
+#then
+#  AC_MSG_CHECKING([for gethostbyname with both nsl and socket libs])
+#  my_ac_save_LIBS=$LIBS
+#  LIBS="-lnsl -lsocket $LIBS"
+#  AC_LINK_IFELSE([
+#    AC_LANG_PROGRAM([[
+#    ]],[[
+#      gethostbyname();
+#    ]])
+#  ],[
+#    AC_MSG_RESULT([yes])
+#    HAVE_GETHOSTBYNAME="1"
+#  ],[
+#    AC_MSG_RESULT([no])
+#    LIBS=$my_ac_save_LIBS
+#  ])
+#fi
 
-if test "$HAVE_GETHOSTBYNAME" != "1"
-then
-  dnl This is for winsock systems
-  if test "$curl_cv_header_windows_h" = "yes"; then
-    if test "$curl_cv_header_winsock_h" = "yes"; then
-      case $host in
-        *-*-mingw32ce*)
-          winsock_LIB="-lwinsock"
-          ;;
-        *)
-          winsock_LIB="-lwsock32"
-          ;;
-      esac
-    fi
-    if test "$curl_cv_header_winsock2_h" = "yes"; then
-      winsock_LIB="-lws2_32"
-    fi
-    if test ! -z "$winsock_LIB"; then
-      my_ac_save_LIBS=$LIBS
-      LIBS="$winsock_LIB $LIBS"
-      AC_MSG_CHECKING([for gethostbyname in $winsock_LIB])
-      AC_LINK_IFELSE([
-        AC_LANG_PROGRAM([[
-#ifdef HAVE_WINDOWS_H
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#include <windows.h>
-#ifdef HAVE_WINSOCK2_H
-#include <winsock2.h>
-#else
-#ifdef HAVE_WINSOCK_H
-#include <winsock.h>
-#endif
-#endif
-#endif
-        ]],[[
-          gethostbyname("www.dummysite.com");
-        ]])
-      ],[
-        AC_MSG_RESULT([yes])
-        HAVE_GETHOSTBYNAME="1"
-      ],[
-        AC_MSG_RESULT([no])
-        winsock_LIB=""
-        LIBS=$my_ac_save_LIBS
-      ])
-    fi
-  fi
-fi
+#if test "$HAVE_GETHOSTBYNAME" != "1"
+#then
+#  dnl This is for winsock systems
+#  if test "$curl_cv_header_windows_h" = "yes"; then
+#    if test "$curl_cv_header_winsock_h" = "yes"; then
+#      case $host in
+#        *-*-mingw32ce*)
+#          winsock_LIB="-lwinsock"
+#          ;;
+#        *)
+#          winsock_LIB="-lwsock32"
+#          ;;
+#      esac
+#    fi
+#    if test "$curl_cv_header_winsock2_h" = "yes"; then
+#      winsock_LIB="-lws2_32"
+#    fi
+#    if test ! -z "$winsock_LIB"; then
+#      my_ac_save_LIBS=$LIBS
+#      LIBS="$winsock_LIB $LIBS"
+#      AC_MSG_CHECKING([for gethostbyname in $winsock_LIB])
+#      AC_LINK_IFELSE([
+#        AC_LANG_PROGRAM([[
+##ifdef HAVE_WINDOWS_H
+##ifndef WIN32_LEAN_AND_MEAN
+##define WIN32_LEAN_AND_MEAN
+##endif
+##include <windows.h>
+##ifdef HAVE_WINSOCK2_H
+##include <winsock2.h>
+##else
+##ifdef HAVE_WINSOCK_H
+##include <winsock.h>
+##endif
+##endif
+##endif
+##        ]],[[
+#          gethostbyname("www.dummysite.com");
+#        ]])
+#      ],[
+#        AC_MSG_RESULT([yes])
+#        HAVE_GETHOSTBYNAME="1"
+#      ],[
+#        AC_MSG_RESULT([no])
+#        winsock_LIB=""
+#        LIBS=$my_ac_save_LIBS
+#      ])
+#    fi
+#  fi
+#fi
 
-if test "$HAVE_GETHOSTBYNAME" != "1"
-then
-  dnl This is for Minix 3.1
-  AC_MSG_CHECKING([for gethostbyname for Minix 3])
-  AC_LINK_IFELSE([
-    AC_LANG_PROGRAM([[
-/* Older Minix versions may need <net/gen/netdb.h> here instead */
-#include <netdb.h>
-    ]],[[
-      gethostbyname("www.dummysite.com");
-    ]])
-  ],[
-    AC_MSG_RESULT([yes])
-    HAVE_GETHOSTBYNAME="1"
-  ],[
-    AC_MSG_RESULT([no])
-  ])
-fi
+#if test "$HAVE_GETHOSTBYNAME" != "1"
+#then
+#  dnl This is for Minix 3.1
+#  AC_MSG_CHECKING([for gethostbyname for Minix 3])
+#  AC_LINK_IFELSE([
+#    AC_LANG_PROGRAM([[
+#/* Older Minix versions may need <net/gen/netdb.h> here instead */
+##include <netdb.h>
+#    ]],[[
+#      gethostbyname("www.dummysite.com");
+#    ]])
+#  ],[
+#    AC_MSG_RESULT([yes])
+#    HAVE_GETHOSTBYNAME="1"
+#  ],[
+#    AC_MSG_RESULT([no])
+#  ])
+#fi
 
-if test "$HAVE_GETHOSTBYNAME" != "1"
-then
-  dnl This is for eCos with a stubbed DNS implementation
-  AC_MSG_CHECKING([for gethostbyname for eCos])
-  AC_LINK_IFELSE([
-    AC_LANG_PROGRAM([[
-#include <stdio.h>
-#include <netdb.h>
-    ]],[[
-      gethostbyname("www.dummysite.com");
-    ]])
-  ],[
-    AC_MSG_RESULT([yes])
-    HAVE_GETHOSTBYNAME="1"
-  ],[
-    AC_MSG_RESULT([no])
-  ])
-fi
+#if test "$HAVE_GETHOSTBYNAME" != "1"
+#then
+#  dnl This is for eCos with a stubbed DNS implementation
+#  AC_MSG_CHECKING([for gethostbyname for eCos])
+#  AC_LINK_IFELSE([
+#    AC_LANG_PROGRAM([[
+##include <stdio.h>
+##include <netdb.h>
+#    ]],[[
+#      gethostbyname("www.dummysite.com");
+#    ]])
+#  ],[
+#    AC_MSG_RESULT([yes])
+#    HAVE_GETHOSTBYNAME="1"
+#  ],[
+#    AC_MSG_RESULT([no])
+#  ])
+#fi
 
-if test "$HAVE_GETHOSTBYNAME" != "1"
-then
-  dnl gethostbyname in the network lib - for Haiku OS
-  AC_CHECK_LIB(network, gethostbyname,
-               [HAVE_GETHOSTBYNAME="1"
-               LIBS="-lnetwork $LIBS"
-               ])
-fi
+#if test "$HAVE_GETHOSTBYNAME" != "1"
+#then
+#  dnl gethostbyname in the network lib - for Haiku OS
+#  AC_CHECK_LIB(network, gethostbyname,
+#               [HAVE_GETHOSTBYNAME="1"
+#              # LIBS="-lnetwork $LIBS"
+#               ])
+#fi
 
-if test "$HAVE_GETHOSTBYNAME" != "1"
-then
-  dnl gethostbyname in the net lib - for BeOS
-  AC_CHECK_LIB(net, gethostbyname,
-               [HAVE_GETHOSTBYNAME="1"
-               LIBS="-lnet $LIBS"
-               ])
-fi
+#if test "$HAVE_GETHOSTBYNAME" != "1"
+#then
+#  dnl gethostbyname in the net lib - for BeOS
+#  AC_CHECK_LIB(net, gethostbyname,
+#               [HAVE_GETHOSTBYNAME="1"
+#               LIBS="-lnet $LIBS"
+#               ])
+#fi
 
+AC_DEFINE_UNQUOTED(HAVE_GETHOSTBYNAME, "1", [blah])
+#if test "$HAVE_GETHOSTBYNAME" != "1"; then
+#  AC_MSG_ERROR([couldn't find libraries for gethostbyname()])
+#fi
 
-if test "$HAVE_GETHOSTBYNAME" != "1"; then
-  AC_MSG_ERROR([couldn't find libraries for gethostbyname()])
-fi
-
-CURL_CHECK_LIBS_CONNECT
+#CURL_CHECK_LIBS_CONNECT
 
 CURL_NETWORK_LIBS=$LIBS
 
@@ -3630,11 +3630,33 @@ TYPE_SIG_ATOMIC_T
 
 AC_TYPE_SIGNAL
 
-CURL_CHECK_FUNC_SELECT
+AC_DEFINE_UNQUOTED(HAVE_SELECT, 1, [select])
+#CURL_CHECK_FUNC_SELECT
 
-CURL_CHECK_FUNC_RECV
-CURL_CHECK_FUNC_SEND
+AC_DEFINE_UNQUOTED(HAVE_RECV, 1, [recv])
+AC_DEFINE_UNQUOTED(RECV_TYPE_ARG1, int, [recv])
+AC_DEFINE_UNQUOTED(RECV_TYPE_ARG2, [void*], [recv])
+AC_DEFINE_UNQUOTED(RECV_TYPE_ARG3, size_t, [recv])
+AC_DEFINE_UNQUOTED(RECV_TYPE_ARG4, int, [recv])
+AC_DEFINE_UNQUOTED(RECV_TYPE_RETV, ssize_t, [recv])
+#CURL_CHECK_FUNC_RECV
+
+AC_DEFINE_UNQUOTED(HAVE_SEND, 1, [send])
+AC_DEFINE_UNQUOTED(SEND_TYPE_ARG1, int, [send])
+AC_DEFINE_UNQUOTED(SEND_QUAL_ARG2, const, [send])
+AC_DEFINE_UNQUOTED(SEND_TYPE_ARG2, [void*], [send])
+AC_DEFINE_UNQUOTED(SEND_TYPE_ARG3, size_t, [send])
+AC_DEFINE_UNQUOTED(SEND_TYPE_ARG4, int, [send])
+AC_DEFINE_UNQUOTED(SEND_TYPE_RETV, ssize_t, [send])
+#CURL_CHECK_FUNC_SEND
+
+AC_DEFINE_UNQUOTED(HAVE_MSG_NOSIGNAL, 1, [msg nosignal])
 CURL_CHECK_MSG_NOSIGNAL
+
+#defs needed
+AC_DEFINE_UNQUOTED(HAVE_SOCKET, 1, [socket])
+AC_DEFINE_UNQUOTED(HAVE_CONNECT, 1, [connect])
+AC_DEFINE_UNQUOTED(HAVE_FCNTL_O_NONBLOCK, 1, [fnctl])
 
 CURL_CHECK_FUNC_ALARM
 CURL_CHECK_FUNC_BASENAME
