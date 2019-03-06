@@ -46,6 +46,8 @@
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/sha256.h>
 
+#include <dirent.h>
+
 #include "urldata.h"
 #include "sendf.h"
 #include "inet_pton.h"
@@ -232,6 +234,157 @@ set_ssl_version_min_max(struct connectdata *conn, int sockindex)
                                mbedtls_ver_max);
 
   return result;
+}
+
+static int
+mbedtls_pk_load_file( const char *path, unsigned char **buf, size_t *n )
+{
+    FILE *f;
+    long size;
+
+    if( ( f = fopen( path, "rb" ) ) == NULL )
+        return( MBEDTLS_ERR_PK_FILE_IO_ERROR );
+
+    fseek( f, 0, SEEK_END );
+    if( ( size = ftell( f ) ) == -1 )
+    {
+        fclose( f );
+        return( MBEDTLS_ERR_PK_FILE_IO_ERROR );
+    }
+    fseek( f, 0, SEEK_SET );
+
+    *n = (size_t) size;
+
+    if( *n + 1 == 0 ||
+        ( *buf = calloc( 1, *n + 1 ) ) == NULL )
+    {
+        fclose( f );
+        return( MBEDTLS_ERR_PK_ALLOC_FAILED );
+    }
+
+    if( fread( *buf, 1, *n, f ) != *n )
+    {
+        fclose( f );
+
+        memset(*buf, 0, *n );
+        free( *buf );
+
+        return( MBEDTLS_ERR_PK_FILE_IO_ERROR );
+    }
+
+    fclose( f );
+
+    (*buf)[*n] = '\0';
+
+    if( strstr( (const char *) *buf, "-----BEGIN " ) != NULL )
+        ++*n;
+
+    return( 0 );
+}
+
+static int
+mbedtls_x509_crt_parse_file( mbedtls_x509_crt *chain, const char *path )
+{
+    int ret;
+    size_t n;
+    unsigned char *buf;
+
+    if( ( ret = mbedtls_pk_load_file( path, &buf, &n ) ) != 0 )
+        return( ret );
+
+    ret = mbedtls_x509_crt_parse( chain, buf, n );
+
+    memset( buf, 0, n );
+    free( buf );
+
+    return( ret );
+}
+
+static int
+mbedtls_x509_crt_parse_path( mbedtls_x509_crt *chain, const char *path )
+{
+    int ret = 0;
+    int t_ret;
+    int snp_ret;
+    struct stat sb;
+    struct dirent *entry;
+    char entry_name[MBEDTLS_X509_MAX_FILE_PATH_LEN];
+    DIR *dir = opendir( path );
+
+    if( dir == NULL )
+        return( MBEDTLS_ERR_X509_FILE_IO_ERROR );
+
+    while( ( entry = readdir( dir ) ) != NULL )
+    {
+        snp_ret = snprintf( entry_name, sizeof entry_name,
+                                    "%s/%s", path, entry->d_name );
+
+        if( snp_ret < 0 || (size_t)snp_ret >= sizeof entry_name )
+        {
+            ret = MBEDTLS_ERR_X509_BUFFER_TOO_SMALL;
+            goto cleanup;
+        }
+        else if( stat( entry_name, &sb ) == -1 )
+        {
+            ret = MBEDTLS_ERR_X509_FILE_IO_ERROR;
+            goto cleanup;
+        }
+
+        if( !S_ISREG( sb.st_mode ) )
+            continue;
+
+        // Ignore parse errors
+        //
+        t_ret = mbedtls_x509_crt_parse_file( chain, entry_name );
+        if( t_ret < 0 )
+            ret++;
+        else
+            ret += t_ret;
+    }
+
+cleanup:
+    closedir( dir );
+    return( ret );
+}
+
+static int
+mbedtls_pk_parse_keyfile( mbedtls_pk_context *ctx,
+                      const char *path, const char *pwd )
+{
+    int ret;
+    size_t n;
+    unsigned char *buf;
+
+    if( ( ret = mbedtls_pk_load_file( path, &buf, &n ) ) != 0 )
+        return( ret );
+
+    if( pwd == NULL )
+        ret = mbedtls_pk_parse_key( ctx, buf, n, NULL, 0 );
+    else
+        ret = mbedtls_pk_parse_key( ctx, buf, n,
+                (const unsigned char *) pwd, strlen( pwd ) );
+
+    memset(buf, 0, n );
+    free( buf );
+
+    return( ret );
+}
+
+static int mbedtls_x509_crl_parse_file( mbedtls_x509_crl *chain, const char *path )
+{
+    int ret;
+    size_t n;
+    unsigned char *buf;
+
+    if( ( ret = mbedtls_pk_load_file( path, &buf, &n ) ) != 0 )
+        return( ret );
+
+    ret = mbedtls_x509_crl_parse( chain, buf, n );
+
+    memset( buf, 0, n );
+    free( buf );
+
+    return( ret );
 }
 
 static CURLcode
